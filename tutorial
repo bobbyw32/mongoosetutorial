@@ -1,0 +1,188 @@
+Mongoose API Tutorial
+
+
+
+CREATION OF SCHEMAS:
+
+## 1)  Include mongoose in projects dependencies after installing
+    
+        let mongoose = require('mongoose');
+
+
+
+
+## 2) Setting up for use of Schemas, define Schema 
+    
+        let Schema = mongoose.Schema;
+
+
+
+
+## 3) Use mongoose.Schema to create new Schemas for data entry into database
+    
+    ex 1.
+
+    const userSchema = new mongoose.Schema({
+
+    username: String,       // defining data type as string
+    password: String,
+    email: String
+})
+
+    ex2.
+
+    const postSchema = new mongoose.Schema({
+    
+    title: String,
+    body: String,
+    author: String,
+    tags: String,
+    
+}) 
+
+
+
+
+## 4) Define the mongoose models to use the appropriate Schema
+
+    let User = mongoose.model('User', userSchema)
+
+    let Post = mongoose.model('Post',postSchema)
+
+  
+
+
+CRUD OPERATIONS USING SCHEMAS
+
+## CREATE:
+
+app.post('/addpost', (req,res)=>{       // EVERY TIME THERE IS A POST REQUEST IT IS SAVED
+
+
+
+                
+    let postData = new Post // DEFINE POSTDATA AS NEW POST, WHICH IS CONNECTED TO SCHEMA AND ITS STRUCTURE
+    
+    ({
+        title:req.body.title,   // PULL DATA FOR SCHEMA POST FROM INPUT ON THE BODY
+        body:req.body.body,
+        author: req.session.username, //TAKES SESSION DATA FOR AUTHOR NAME
+        tags: req.body.tag,
+        
+})
+    
+    postData.save().then(result =>{     // MUST USE .SAVE TO APPLY CHANGES TO DATABASE
+        
+        res.redirect('/blog')   //  DIRECTS TO SAME PAGE, UPDATING BLOGS AFTER POST
+
+    })
+
+})
+
+
+## READ:
+
+app.get("/blog", (req,res)=>{       //  FINDS ALL POSTS IN THE DATABASE
+
+    
+    Post.find({author:req.session.username}, (err, data)=>{    // USING POST.FIND TO SEARCH FOR POSTS ASSOCIATED WITH THE SESSION USERNAME, WHICH IS THE LOGGED IN USER
+
+        res.render('../blog.ejs',{post:data})   // USING EJS TO RENDER DATA OF POSTS BY SESSION USER
+    
+    })
+
+
+})
+
+
+## UPDATE:
+
+app.post('/edit', function(req,res){
+
+    let editTitle = req.body.editTitle     //SETTING EDITTITLE AND EDITBODY AS INPUTS ON PAGE
+    let editBody = req.body.editBody
+
+    Post.updateOne({ title: editTitle }, {$set:{title:editTitle, body:editBody}}, function(err, result){    //USING UPDATEONE TO FIND POST TITLE USING THE EDITTITLE 
+    
+    INPUT AND THEN UPDATING THE POST TITLE AND BODY WITH DATA ENTERED ON THE PAGE
+    
+        res.redirect('/blog')
+    })
+
+})
+
+
+##  DELETE:
+
+app.post('/delpost', (req,res)=>{
+
+
+    let delName = req.body.deltitle;    //SETTING DELNAME AS INPUTS ON PAGE
+
+    Post.findOneAndRemove({ title: delName }, function (err, result){   //USING FINDONEANDREMOVE TO USE INPUT ON PAGE AS SEARCH FOR BLOG WITH SPECIFIC TITLE, DELETING 
+    
+    THAT POST
+       
+   
+    res.redirect('/blog')
+  })
+}) 
+
+
+## USING ROUTES AND CONTROLLERS:
+
+1) Set router
+        const router = express.Router()
+
+2) Create controllers folder
+
+2) Create controllers.js file
+
+3)  Example moving to router/controller
+        - move related functions into similar controller files
+
+Before:
+
+
+    app.post('/delpost', (req,res)=>{
+
+
+    let delName = req.body.deltitle;    //SETTING DELNAME AS INPUTS ON PAGE
+
+    Post.findOneAndRemove({ title: delName }, function (err, result){   //USING FINDONEANDREMOVE TO USE INPUT ON PAGE AS SEARCH FOR BLOG WITH SPECIFIC TITLE, DELETING 
+    
+    THAT POST
+       
+   
+    res.redirect('/blog')
+  })
+}) 
+
+
+
+After:
+
+
+    router.post('/delpost', controller.delpost)
+
+
+Controller.js file:
+
+    module.exports = {
+
+        delpost: async (req, res) => {
+        
+        let delName = req.body.deltitle;    //SETTING DELNAME AS INPUTS ON PAGE
+
+        Post.findOneAndRemove({ title: delName }, function (err, result){   //USING FINDONEANDREMOVE TO USE INPUT ON PAGE AS SEARCH FOR BLOG WITH SPECIFIC TITLE, DELETING THAT POST
+       
+   
+    res.redirect('/blog')       
+
+
+        })
+
+    })
+
+
+4) Must place necessary require statements from original js file to top of controller file to ensure proper functionality.
